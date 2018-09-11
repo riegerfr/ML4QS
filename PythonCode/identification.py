@@ -63,7 +63,7 @@ for label in folders:
 
         FreqAbs = FourierTransformation()
 
-        transformation = np.abs(np.fft.fft(new_dataset['GyroscopeZ (rad/s)'], 50)) #todo: other sensors
+        transformation = np.abs(np.fft.fft(new_dataset['GyroscopeZ (rad/s)'], 50))  # todo: other sensors
 
         # gyro_ft_real, gyro_ft_imag = FreqAbs.find_fft_transformation(new_dataset['GyroscopeZ (rad/s)'], 50)
         # data_table = FreqAbs.abstract_frequency(copy.deepcopy(new_dataset), ['GyroscopeZ (rad/s)'], 20, 50)
@@ -82,44 +82,42 @@ for label in folders:
         flattened_values = np.append(flattened_values, transformation)
 
         df = pd.DataFrame(data=flattened_values).T
-        df['label'] = [str(label)]
+        df['class'] = [str(label)]
 
-      #  samples_dataframe = samples_dataframe.append(df)
-        frames.append (df)
+        #  samples_dataframe = samples_dataframe.append(df)
+        frames.append(df)
 
 result = pd.concat(frames)
 
+result.columns = result.columns.astype(str)
+
 prepare = PrepareDatasetForLearning()
 
-train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(result, ['label'], 'like', 0.7,
+train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(result, ['class'], 'unlike', 0.7,
                                                                                filter=True, temporal=False)
 
+# acc_dataset = pd.read_csv(path + "Accelerometer.csv", skipinitialspace=True)
+# mag_dataset = pd.read_csv(path + "Magnetometer.csv", skipinitialspace=True)
 
+# time = acc_dataset["Time (s)"]
+# acc_x = acc_dataset["Acceleration x (m/s^2)"]
+# acc_y = acc_dataset["Acceleration y (m/s^2)"]
+# acc_z = acc_dataset["Acceleration z (m/s^2)"]
 
+# learner = ClassificationAlgorithms()
 
-#acc_dataset = pd.read_csv(path + "Accelerometer.csv", skipinitialspace=True)
-#mag_dataset = pd.read_csv(path + "Magnetometer.csv", skipinitialspace=True)
-
-#time = acc_dataset["Time (s)"]
-#acc_x = acc_dataset["Acceleration x (m/s^2)"]
-#acc_y = acc_dataset["Acceleration y (m/s^2)"]
-#acc_z = acc_dataset["Acceleration z (m/s^2)"]
-
-#learner = ClassificationAlgorithms()
-
-#prepare = PrepareDatasetForLearning()
+# prepare = PrepareDatasetForLearning()
 
 
 learner = ClassificationAlgorithms()
 eval = ClassificationEvaluation()
-
 
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(train_X,
                                                                                                         train_y,
                                                                                                         test_X,
                                                                                                         hidden_layer_sizes=(
                                                                                                             250,),
-                                                                                                       # alpha=reg_param,
+                                                                                                        # alpha=reg_param,
                                                                                                         max_iter=500,
                                                                                                         gridsearch=False)
 
