@@ -46,138 +46,125 @@ for label in folders:
 
         dataSet.data_table = dataSet.data_table[(length - 53): (length - 1)]  # same length for every sample
 
-        cutofffrequency = 20
-        LowPass = LowPassFilter()
-        new_dataset = LowPass.low_pass_filter(dataSet.data_table, 'AccelerometerX (m/s^2)', 50, cutofffrequency,
-                                              order=3, phase_shift=True)
-        new_dataset = LowPass.low_pass_filter(new_dataset, 'AccelerometerY (m/s^2)', 50, cutofffrequency, order=3,
-                                              phase_shift=True)
-        new_dataset = LowPass.low_pass_filter(new_dataset, 'AccelerometerZ (m/s^2)', 50, cutofffrequency, order=3,
-                                              phase_shift=True)
-        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeX (rad/s)', 50, cutofffrequency, order=3,
-                                              phase_shift=True)
-        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeY (rad/s)', 50, cutofffrequency, order=3,
-                                              phase_shift=True)
-        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeZ (rad/s)', 50, cutofffrequency, order=3,
-                                              phase_shift=True)
-
         FreqAbs = FourierTransformation()
+        transformations = []
+        number_frequencies = 50
+        for column in list(dataSet.data_table.columns):
+            transformation = np.abs(np.fft.fft(dataSet.data_table[column], number_frequencies))
+            transformations.append(transformation)
 
-        transformation = np.abs(np.fft.fft(new_dataset['GyroscopeZ (rad/s)'], 50))  # todo: other sensors
-
-        # gyro_ft_real, gyro_ft_imag = FreqAbs.find_fft_transformation(new_dataset['GyroscopeZ (rad/s)'], 50)
-        # data_table = FreqAbs.abstract_frequency(copy.deepcopy(new_dataset), ['GyroscopeZ (rad/s)'], 20, 50)
-        # Get the frequencies from the columns....
-        # frequencies = []
-        # values = []
-        # for col in data_table.columns:
-        #    val = re.findall(r'freq_\d+\.\d+_Hz', col)
-        #    if len(val) > 0:
-        #        frequency = float((val[0])[5:len(val) - 4])
-        #        frequencies.append(frequency)
-        #        values.append(data_table.ix[data_table.index, col])
-        # print new_dataset
+        cutoff_frequency = 20
+        sampling_frequency = 50
+        order = 3
+        LowPass = LowPassFilter()
+        new_dataset = LowPass.low_pass_filter(dataSet.data_table, 'AccelerometerX (m/s^2)', sampling_frequency,
+                                              cutoff_frequency,
+                                              order=order, phase_shift=True)
+        new_dataset = LowPass.low_pass_filter(new_dataset, 'AccelerometerY (m/s^2)', sampling_frequency,
+                                              cutoff_frequency, order=order,
+                                              phase_shift=True)
+        new_dataset = LowPass.low_pass_filter(new_dataset, 'AccelerometerZ (m/s^2)', sampling_frequency,
+                                              cutoff_frequency, order=order,
+                                              phase_shift=True)
+        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeX (rad/s)', sampling_frequency, cutoff_frequency,
+                                              order=order,
+                                              phase_shift=True)
+        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeY (rad/s)', sampling_frequency, cutoff_frequency,
+                                              order=order,
+                                              phase_shift=True)
+        new_dataset = LowPass.low_pass_filter(new_dataset, 'GyroscopeZ (rad/s)', sampling_frequency, cutoff_frequency,
+                                              order=order,
+                                              phase_shift=True)
 
         flattened_values = new_dataset.values.flatten()
-        flattened_values = np.append(flattened_values, transformation)
+
+        for transformation in transformations:
+            flattened_values = np.append(flattened_values, transformation)
 
         df = pd.DataFrame(data=flattened_values).T
         df['class'] = [str(label)]
 
-        #  samples_dataframe = samples_dataframe.append(df)
         frames.append(df)
 
 result = pd.concat(frames)
 
 result.columns = result.columns.astype(str)
 
+#result = result.sample(frac=1)
 prepare = PrepareDatasetForLearning()
 
-train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(result, ['class'], 'unlike', 0.7,
+train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(result, ['class'], 'unlike', 0.8,
                                                                                filter=True, temporal=False)
 
-# acc_dataset = pd.read_csv(path + "Accelerometer.csv", skipinitialspace=True)
-# mag_dataset = pd.read_csv(path + "Magnetometer.csv", skipinitialspace=True)
+number_training_samples = len(train_X)
+val_split = int(0.7 * number_training_samples)
+val_X = train_X[val_split:-1]
+val_y = train_y[val_split:-1]
+train_X = train_X[0:val_split - 1]
+train_y = train_y[0:val_split - 1]
 
-# time = acc_dataset["Time (s)"]
-# acc_x = acc_dataset["Acceleration x (m/s^2)"]
-# acc_y = acc_dataset["Acceleration y (m/s^2)"]
-# acc_z = acc_dataset["Acceleration z (m/s^2)"]
-
-# learner = ClassificationAlgorithms()
-
-# prepare = PrepareDatasetForLearning()
 
 
 learner = ClassificationAlgorithms()
 eval = ClassificationEvaluation()
 
+print(len( val_X))
+
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(train_X,
                                                                                                         train_y,
-                                                                                                        test_X,
+                                                                                                        val_X,
                                                                                                         hidden_layer_sizes=(
-                                                                                                            250,),
+                                                                                                            250, 50,),
                                                                                                         # alpha=reg_param,
                                                                                                         max_iter=500,
                                                                                                         gridsearch=False)
 
-
-
 performance_tr_nn = eval.accuracy(train_y, class_train_y)
-performance_te_nn = eval.accuracy(test_y, class_test_y)
+performance_te_nn = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_nn)
-
 
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(
-    train_X, train_y, test_X, gridsearch=True)
+    train_X, train_y, val_X, gridsearch=True)
 performance_tr_nn = eval.accuracy(train_y, class_train_y)
-performance_te_nn = eval.accuracy(test_y, class_test_y)
+performance_te_nn = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_nn)
 
-
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.random_forest(train_X, train_y,
-                                                                                           test_X,
+                                                                                           val_X,
                                                                                            gridsearch=True)
 performance_tr_rf = eval.accuracy(train_y, class_train_y)
-performance_te_rf = eval.accuracy(test_y, class_test_y)
+performance_te_rf = eval.accuracy(val_y, class_test_y)
 print(performance_te_rf)
 
-
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.support_vector_machine_with_kernel(
-    train_X, train_y, test_X, gridsearch=True)
+    train_X, train_y, val_X, gridsearch=True)
 performance_tr_svm = eval.accuracy(train_y, class_train_y)
-performance_te_svm = eval.accuracy(test_y, class_test_y)
+performance_te_svm = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_svm)
 
-
-
-
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.k_nearest_neighbor(train_X,
                                                                                                 train_y,
-                                                                                                test_X,
+                                                                                                val_X,
                                                                                                 gridsearch=True)
 performance_tr_knn = eval.accuracy(train_y, class_train_y)
-performance_te_knn = eval.accuracy(test_y, class_test_y)
+performance_te_knn = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_knn)
 
-
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.decision_tree(train_X, train_y,
-                                                                                           test_X,
+                                                                                           val_X,
                                                                                            gridsearch=True)
 performance_tr_dt = eval.accuracy(train_y, class_train_y)
-performance_te_dt = eval.accuracy(test_y, class_test_y)
+performance_te_dt = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_dt)
 
-
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.naive_bayes(train_X, train_y,
-                                                                                         test_X)
+                                                                                         val_X)
 performance_tr_nb = eval.accuracy(train_y, class_train_y)
-performance_te_nb = eval.accuracy(test_y, class_test_y)
+performance_te_nb = eval.accuracy(val_y, class_test_y)
 
 print(performance_te_nb)
-
