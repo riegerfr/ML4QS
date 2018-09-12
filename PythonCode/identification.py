@@ -21,8 +21,14 @@ from Chapter2.CreateDataset import CreateDataset
 from Chapter3.DataTransformation import LowPassFilter
 from Chapter4.FrequencyAbstraction import FourierTransformation
 import re
+import os
+import inspect
 
-path = "C:\\Users\\riege\\OneDrive - University of Waterloo\\LaptopSicherung\\Desktop\\Olang_ML4QS\\daten-neu"
+my_path = os.path.abspath(os.path.dirname(__file__))
+path = os.path.join(my_path,"..\\data\daten-neu")
+
+#print os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
 folders = os.listdir(path)  # labels
 
 milliseconds_per_instance = 50

@@ -27,8 +27,8 @@ def cut_length(path_csv, length):
     data_filtered['Time (s)'] =  data_filtered['Time (s)']*1000000000
     data_filtered.to_csv(path_csv)
 
-
-path = "C:\\Users\\riege\\OneDrive - University of Waterloo\\LaptopSicherung\\Desktop\\Olang_ML4QS\\daten-neu"
+my_path = os.path.abspath(os.path.dirname(__file__))
+path = os.path.join(my_path,"..\\data\daten-neu")
 folders = os.listdir(path)  # labels
 
 
