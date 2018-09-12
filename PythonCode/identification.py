@@ -121,7 +121,63 @@ class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.fee
                                                                                                         max_iter=500,
                                                                                                         gridsearch=False)
 
+
+
 performance_tr_nn = eval.accuracy(train_y, class_train_y)
 performance_te_nn = eval.accuracy(test_y, class_test_y)
 
 print(performance_te_nn)
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(
+    train_X, train_y, test_X, gridsearch=True)
+performance_tr_nn = eval.accuracy(train_y, class_train_y)
+performance_te_nn = eval.accuracy(test_y, class_test_y)
+
+print(performance_te_nn)
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.random_forest(train_X, train_y,
+                                                                                           test_X,
+                                                                                           gridsearch=True)
+performance_tr_rf = eval.accuracy(train_y, class_train_y)
+performance_te_rf = eval.accuracy(test_y, class_test_y)
+print(performance_te_rf)
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.support_vector_machine_with_kernel(
+    train_X, train_y, test_X, gridsearch=True)
+performance_tr_svm = eval.accuracy(train_y, class_train_y)
+performance_te_svm = eval.accuracy(test_y, class_test_y)
+
+print(performance_te_svm)
+
+
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.k_nearest_neighbor(train_X,
+                                                                                                train_y,
+                                                                                                test_X,
+                                                                                                gridsearch=True)
+performance_tr_knn = eval.accuracy(train_y, class_train_y)
+performance_te_knn = eval.accuracy(test_y, class_test_y)
+
+print(performance_te_knn)
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.decision_tree(train_X, train_y,
+                                                                                           test_X,
+                                                                                           gridsearch=True)
+performance_tr_dt = eval.accuracy(train_y, class_train_y)
+performance_te_dt = eval.accuracy(test_y, class_test_y)
+
+print(performance_te_dt)
+
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.naive_bayes(train_X, train_y,
+                                                                                         test_X)
+performance_tr_nb = eval.accuracy(train_y, class_train_y)
+performance_te_nb = eval.accuracy(test_y, class_test_y)
+
+print(performance_te_nb)
+
