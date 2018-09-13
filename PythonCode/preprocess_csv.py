@@ -23,8 +23,11 @@ from Chapter2.CreateDataset import CreateDataset
 def cut_length(path_csv, length):
     data = pd.read_csv(path_csv)
     max_time = np.max(data["Time (s)"])
+    if (max_time < 3 and (path_csv.__contains__('Gyroscope') or path_csv.__contains__('Accelerometer'))):
+        print path_csv
+        print max_time
     data_filtered = data[data['Time (s)'] > max_time - length]
-    data_filtered['Time (s)'] =  data_filtered['Time (s)']*1000000000
+    data_filtered['Time (s)'] = data_filtered['Time (s)'] * 1000000000
     data_filtered.to_csv(path_csv)
 
 my_path = os.path.abspath(os.path.dirname(__file__))
