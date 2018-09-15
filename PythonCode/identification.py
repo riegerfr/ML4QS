@@ -59,7 +59,7 @@ for label in folders:
         number_frequencies = 50
         for column in list(dataSet.data_table.columns):
             transformation = np.abs(np.fft.fft(dataSet.data_table[column], number_frequencies))
-            transformations.append(transformation)
+            transformations.append((column,transformation))
 
         cutoff_frequency = 20
         sampling_frequency = 50
@@ -122,13 +122,17 @@ for label in folders:
         flattened_values["accY_sd"] = np.std(new_dataset['AccelerometerY (m/s^2)'])
         flattened_values["accZ_sd"] = np.std(new_dataset['AccelerometerZ (m/s^2)'])
 
-        for transformation in transformations:
+        for columnname, values  in transformations:
             # flattened_values = np.append(flattened_values, transformation)
-            flattened_values = np.append(flattened_values, np.argmax(transformation))
-            flattened_values = np.append(flattened_values, np.max(transformation))
 
-        df = pd.DataFrame(data=flattened_values).T
-        df['class'] = [str(label)]
+            flattened_values[columnname +"_argmax"] = (np.argmax(values))
+            flattened_values[columnname +"_max"] = (np.max(values))
+            #flattened_values = flattened_values.join(np.max(transformation))
+            #flattened_values = np.append(flattened_values, np.argmax(transformation))
+            #flattened_values = np.append(flattened_values, np.max(transformation))
+
+        df = pd.DataFrame(data=flattened_values)
+        df['class'] = str(label)
 
         frames.append(df)
 
@@ -178,7 +182,8 @@ print(performance_te_nn)
 
 class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.random_forest(train_X, train_y,
                                                                                            test_X,
-                                                                                           gridsearch=True)
+                                                                                           gridsearch=True
+                                                                                           ,print_model_details=True)
 performance_tr_rf = eval.accuracy(train_y, class_train_y)
 performance_te_rf = eval.accuracy(test_y, class_test_y)
 print(performance_te_rf)
